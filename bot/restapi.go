@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package gobot
+package botlib
 
 import (
 	"bytes"
@@ -173,19 +173,6 @@ func (a *Api) messageCreateCall(m *discordgo.MessageCreate) {
 	if _, err := a.Request("POST", EndpointMessage, m); err != nil {
 		logging.Warning("リクエストに失敗 %s", err)
 	}
-}
-
-// ----------------------------------------------------------------
-// ギルド
-// ----------------------------------------------------------------
-
-func (a *Api) GuildFeatureCreate(feature *GuildFeature) (err error) {
-	_, err = a.Request("POST", EndpointGuildFeature, feature)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // ----------------------------------------------------------------

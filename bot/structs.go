@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package gobot
+package botlib
 
 type MessageLog struct {
 	ID        string
@@ -23,10 +23,4 @@ type MessageLog struct {
 	UserID    string
 	Content   string
 	Bot       bool
-}
-
-type GuildFeature struct {
-	ID        string
-	ChannelID string
-	FeatureID int
 }

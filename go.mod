@@ -12,7 +12,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-colorable v0.1.13
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
-	github.com/sabafly/gobot v0.12.0-alpha01
 	go.uber.org/zap v1.24.0
 	golang.org/x/text v0.7.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -21,6 +20,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
