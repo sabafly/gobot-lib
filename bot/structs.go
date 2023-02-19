@@ -24,3 +24,9 @@ type MessageLog struct {
 	Content   string
 	Bot       bool
 }
+
+type GuildFeature struct {
+	GuildID   string `gorm:"index"`
+	TargetID  string
+	FeatureID string
+}

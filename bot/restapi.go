@@ -207,3 +207,57 @@ func (a *Api) StaticsUserMessage(guildID, userID string) (logs []MessageLog, err
 
 	return logs, nil
 }
+
+// ----------------------------------------------------------------
+// Feature関連
+// ----------------------------------------------------------------
+
+func (a *Api) FeatureEnable(guildID, featureID, id string) (err error) {
+	Feature := GuildFeature{
+		GuildID:   guildID,
+		FeatureID: featureID,
+		TargetID:  id,
+	}
+
+	_, err = a.Request("POST", EndpointGuildFeature, Feature)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Api) FeatureDisable(guildID, featureID, id string) (err error) {
+	Feature := GuildFeature{
+		GuildID:   guildID,
+		FeatureID: featureID,
+		TargetID:  id,
+	}
+
+	_, err = a.Request("DELETE", EndpointGuildFeature, Feature)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Api) FeatureEnabled(guildID, featureID, id string) (enabled bool, err error) {
+	Feature := GuildFeature{
+		GuildID:   guildID,
+		FeatureID: featureID,
+		TargetID:  id,
+	}
+
+	isEnabled := struct{ Enabled bool }{}
+	response, err := a.Request("GET", EndpointGuildFeature, Feature)
+	if err != nil {
+		return false, err
+	}
+	err = json.Unmarshal(response, &isEnabled)
+	if err != nil {
+		return false, err
+	}
+
+	return isEnabled.Enabled, nil
+}

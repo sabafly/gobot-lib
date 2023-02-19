@@ -62,6 +62,7 @@ type BotManager struct {
 	*Api
 	ShardCount int
 	Shards     []*Shard
+	features   *FeatureManager
 }
 
 // ボットセッションを開始する
@@ -154,7 +155,8 @@ func shardCount(s *discordgo.Session) (count int, err error) {
 func validateShards(token string, count int) (bot *BotManager, err error) {
 	bot = &BotManager{
 		// API接続関連
-		Api: NewApi(),
+		Api:      NewApi(),
+		features: NewFeatureManager(),
 	}
 
 	for i := 0; i < count; i++ {
