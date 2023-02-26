@@ -1,0 +1,3 @@
+files:
+  - source: /translate/ja.yaml
+    translation: /tanslate/lang/%two_letters_code%.yaml
