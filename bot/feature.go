@@ -362,6 +362,7 @@ func (bm *BotManager) FeatureApplicationCommandHandler() func(*discordgo.Session
 	}
 }
 
+// TODO: 再利用可能に
 func RequestFeatureIDRespond(s *discordgo.Session, i *discordgo.InteractionCreate, f *Feature) (ic *discordgo.InteractionCreate, fID []string) {
 	var menuType discordgo.SelectMenuType
 	channelTypes := []discordgo.ChannelType{}
