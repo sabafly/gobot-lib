@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2022-2023  ikafly144
+	Copyright (C) 2022-2023  sabafly
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,12 +17,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package botlib
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 	"sort"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/uuid"
 	"github.com/sabafly/gobot-lib/constants"
 	"github.com/sabafly/gobot-lib/translate"
 )
@@ -155,4 +157,109 @@ func MessageLogDetails(m []MessageLog) (day, week, all int, channelID string) {
 		channelID = count[0].ID
 	}
 	return len(inDay), len(inWeek), len(m), channelID
+}
+
+type WaitNewInteractionResponseMessageData struct {
+	Data *discordgo.InteractionResponseData
+	Type discordgo.InteractionResponseType
+
+	// TypeがInteractionResponseModalの時のみ使用される
+	ModalComponent []discordgo.MessageComponent
+	ModalHandler   func(*discordgo.Session, *discordgo.MessageComponentInteractionData)
+}
+
+// TODO: クソみたいな仕様
+// TODO: 使い方を書き残す
+// TODO: 使わないかもしれない
+func WaitNewInteractionResponseSingle(s *discordgo.Session, i *discordgo.InteractionCreate, messageData WaitNewInteractionResponseMessageData) (ic *discordgo.InteractionCreate, err error) {
+	customID := uuid.NewString()
+	ctx := context.Background()
+	ctx, _ = context.WithDeadline(ctx, time.Now().Add(time.Minute*5))
+	var cancel func()
+	var handler func(*discordgo.Session, *discordgo.InteractionCreate)
+	switch messageData.Type {
+	case discordgo.InteractionResponseModal:
+		handler = func(s *discordgo.Session, i2 *discordgo.InteractionCreate) {
+			if i2.Type != discordgo.InteractionModalSubmit {
+				cancel = s.AddHandler(handler)
+				return
+			}
+			if i2.MessageComponentData().CustomID != customID {
+				cancel = s.AddHandlerOnce(handler)
+				return
+			}
+			ic = i2
+			ctx.Done()
+		}
+		cancel = s.AddHandlerOnce(handler)
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseModal,
+			Data: &discordgo.InteractionResponseData{
+				Components: messageData.ModalComponent,
+				CustomID:   customID,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		<-ctx.Done()
+		if ctx.Err() != nil {
+			cancel()
+		}
+	case discordgo.InteractionResponseChannelMessageWithSource:
+		handler = func(s *discordgo.Session, i2 *discordgo.InteractionCreate) {
+			if i2.Type != discordgo.InteractionMessageComponent {
+				cancel = s.AddHandler(handler)
+				return
+			}
+			if i2.MessageComponentData().CustomID != customID {
+				cancel = s.AddHandler(handler)
+				return
+			}
+			ic = i2
+			ctx.Done()
+		}
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: messageData.Data,
+		})
+		if err != nil {
+			return nil, err
+		}
+		<-ctx.Done()
+		if ctx.Err() != nil {
+			cancel()
+		}
+	}
+	return ic, nil
+}
+
+func SendWebhook(s *discordgo.Session, channelID string, data *discordgo.WebhookParams) (st *discordgo.Message, err error) {
+	webhooks, err := s.ChannelWebhooks(channelID)
+	if err != nil {
+		return nil, err
+	}
+	var webhook *discordgo.Webhook = nil
+	for _, w := range webhooks {
+		if w.User.ID == s.State.User.ID {
+			webhook = w
+		}
+	}
+	if webhook == nil {
+		webhook, err = s.WebhookCreate(channelID, "gobot-webhook", s.State.User.AvatarURL(""))
+		if err != nil {
+			return nil, err
+		}
+	}
+	if data.Username == "" {
+		data.Username = s.State.User.Username
+	}
+	if data.AvatarURL == "" {
+		data.AvatarURL = s.State.User.AvatarURL("")
+	}
+	st, err = s.WebhookExecute(webhook.ID, webhook.Token, true, data)
+	if err != nil {
+		return nil, err
+	}
+	return st, nil
 }
